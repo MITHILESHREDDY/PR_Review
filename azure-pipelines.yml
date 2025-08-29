@@ -1,0 +1,57 @@
+trigger:
+  branches:
+    exclude:
+      - "*"
+
+pr:
+  branches:
+    include:
+      - "*"
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  python_version: '3.x'  # Define the Python version to use
+
+jobs:
+- job: RunPythonChecks
+  displayName: 'Run Python code review checks'
+  steps:
+    - task: Checkout@1  # Checkout the code
+
+    # Debugging: Print environment variables to help troubleshoot
+    - script: |
+        echo "## Debugging Environment Variables ##"
+        set
+      displayName: 'Print Environment Variables'
+
+    # Install Python 3.11 using Chocolatey (Windows)
+    - script: |
+        echo "Installing Python 3.11..."
+        choco install python --version=3.11 -y
+        python --version  # Verify Python version
+      displayName: 'Install Python 3.11'
+
+    # Set Python path and upgrade pip
+    - script: |
+        python -m pip install --upgrade pip
+        echo "Python version installed: $(python --version)"
+      displayName: 'Upgrade pip and verify Python installation'
+
+    # Install dependencies if required (uncomment if using requirements.txt)
+    - script: |
+        pip install -r requirements.txt  # Uncomment if you have dependencies
+      displayName: 'Install Dependencies'
+
+    # Run the Python script
+    - script: |
+        echo "Running PR review checks..."
+        python pr_review_code.py  # Ensure the script is in the correct path
+      displayName: 'Run pr_review_code.py'
+    
+    # Ensure exit status is handled properly
+    - script: |
+        echo "Ensuring script exit code is handled properly"
+        python pr_review_code.py || exit 1
+      displayName: 'Ensure Python script exit status'
